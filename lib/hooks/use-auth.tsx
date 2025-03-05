@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { User } from '../../types';
 
@@ -38,13 +38,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
+          const userData = userDoc.data();
           setUser({ 
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             displayName: firebaseUser.displayName || '',
             photoURL: firebaseUser.photoURL || '',
-            businessName: userDoc.data().businessName || '',
-            createdAt: userDoc.data().createdAt?.toDate() || new Date(),
+            businessName: userData.businessName || '',
+            createdAt: userData.createdAt?.toDate() || new Date(),
           });
         } else {
           setUser(null);
@@ -65,13 +66,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       await updateProfile(firebaseUser, { displayName });
       
-      const userData: Omit<User, 'uid'> & { createdAt: any } = {
+      const userData: Omit<User, 'uid'> & { createdAt: Timestamp } = {
         email: firebaseUser.email || '',
         displayName,
         businessName,
         photoURL: firebaseUser.photoURL || '',
-        createdAt: serverTimestamp(),
+        createdAt: serverTimestamp() as unknown as Timestamp, // Explicitly cast
       };
+      
       
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
       

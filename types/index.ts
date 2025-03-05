@@ -1,10 +1,12 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface User {
   uid: string;
   email: string;
   displayName?: string;
   photoURL?: string;
   businessName?: string;
-  createdAt: Date;
+  createdAt: Date | Timestamp;  // Allow both Date and Firestore Timestamp
 }
 
 export interface Listing {
